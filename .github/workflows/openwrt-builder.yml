@@ -49,7 +49,8 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
         if [ ! -f feeds.conf.default ]; then
-          cp feeds.conf.default openwrt/feeds.conf.default
+          echo "feeds.conf.default 文件不存在,请检查!"
+          exit 1
         fi
 
     - name: 克隆源代码
