@@ -85,7 +85,7 @@ jobs:
         sudo -E apt-get -qq clean
     - name: 清理编译缓存
       run: |
-        make clean    
+        make distclean
         echo "------------------------------- 设置工作目录及时区 -------------------------------"
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
