@@ -48,13 +48,17 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
-        cp feeds.conf.default openwrt/feeds.conf.default
+        if [ ! -f openwrt/feeds.conf.default ]; then
+          cp feeds.conf.default openwrt/feeds.conf.default
+        fi
 
     - name: 克隆源代码
       working-directory: /workdir
       run: |
         df -hT $PWD
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        if [ ! -d openwrt ]; then
+          git clone $REPO_URL -b $REPO_BRANCH openwrt
+        fi
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
     - name: 加载自定义 feeds
