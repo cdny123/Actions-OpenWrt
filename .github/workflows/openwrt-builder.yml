@@ -35,7 +35,7 @@ jobs:
     - name: 检出代码
       uses: actions/checkout@main
 
-    - name: 初始化环境
+        - name: 初始化环境
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -48,11 +48,11 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
-        if [ ! -f openwrt/feeds.conf.default ]; then
+        if [ ! -f feeds.conf.default ]; then
           cp feeds.conf.default openwrt/feeds.conf.default
         fi
 
-    - name: 克隆源代码
+        - name: 克隆源代码
       working-directory: /workdir
       run: |
         df -hT $PWD
@@ -61,11 +61,19 @@ jobs:
         fi
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
-    - name: 加载自定义 feeds
+        - name: 加载自定义配置
       run: |
-        chmod +x $DIY_P1_SH
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
+        if [ -d files ]; then
+          mv files openwrt/files
+        fi
+        if [ -f $CONFIG_FILE ]; then
+          mv $CONFIG_FILE openwrt/.config
+        fi
+        if [ -f $DIY_P2_SH ]; then
+          chmod +x $DIY_P2_SH
+          cd openwrt
+          $GITHUB_WORKSPACE/$DIY_P2_SH
+        fi
 
     - name: 更新 feeds
       run: cd openwrt && ./scripts/feeds update -a
