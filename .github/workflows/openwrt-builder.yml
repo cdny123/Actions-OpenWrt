@@ -221,7 +221,10 @@ jobs:
 
     - name: 删除自动发布的旧固件
       uses: dev-drprasad/delete-older-releases@v0.1.0
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
       with:
-        keep_latest: 4
+        repo: istoreos/istoreos
+        keep_latest: 5
         delete_tags: true
+     
