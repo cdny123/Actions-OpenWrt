@@ -1,13 +1,13 @@
 #
 # https://github.com/P3TERX/Actions-OpenWrt
 #
-# File: .github/workflows/openwrt-builder.yml
-# Description: Build OpenWrt using GitHub Actions
+# 文件: .github/workflows/openwrt-builder.yml
+# 描述: 使用 GitHub Actions 编译 OpenWrt
 #
-# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
+# 版权 (c) 2019-2024 P3TERX <https://p3terx.com>
 #
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
+# 这是一个自由软件,基于 MIT 许可证发布。
+# 更多信息请参见 /LICENSE。
 #
 
 name: OpenWrt Builder
@@ -19,7 +19,6 @@ on:
 env:
   REPO_URL: https://github.com/istoreos/istoreos
   REPO_BRANCH: istoreos-22.03
-  FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
@@ -49,6 +48,7 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
+        cp feeds.conf.default openwrt/feeds.conf.default
 
     - name: 克隆源代码
       working-directory: /workdir
@@ -59,7 +59,6 @@ jobs:
 
     - name: 加载自定义 feeds
       run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
@@ -104,14 +103,6 @@ jobs:
             rm -rf packages
             echo "FIRMWARE=$PWD" >> $GITHUB_ENV
             echo "status=success" >> $GITHUB_OUTPUT
-          else
-            echo "在 openwrt/bin/targets/*/* 目录下未找到固件文件" >> $GITHUB_OUTPUT
-            echo "status=failure" >> $GITHUB_OUTPUT
-          fi
-        else
-          echo "未找到 openwrt/bin/targets/*/* 目录" >> $GITHUB_OUTPUT
-          echo "status=failure" >> $GITHUB_OUTPUT
-        fi
 
     - name: 上传固件目录
       uses: actions/upload-artifact@main
