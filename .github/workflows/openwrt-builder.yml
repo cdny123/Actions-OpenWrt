@@ -16,6 +16,18 @@ on:
   repository_dispatch:
   workflow_dispatch:
 
+- name: Run
+  shell: /usr/bin/bash -e {0}
+  run: |
+  # 确保当前工作目录是正确的
+  cd openwrt/bin/targets/*/*
+    
+  # 删除 packages 目录
+  rm -rf packages
+    
+  # 设置环境变量
+  echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+  echo "status=success" >> $GITHUB_OUTPUT
 env:
   REPO_URL: https://github.com/istoreos/istoreos
   REPO_BRANCH: istoreos-22.03
