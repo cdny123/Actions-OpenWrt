@@ -35,7 +35,7 @@ jobs:
     - name: 检出代码
       uses: actions/checkout@main
 
-        - name: 初始化环境
+    - name: 初始化环境
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -52,7 +52,7 @@ jobs:
           cp feeds.conf.default openwrt/feeds.conf.default
         fi
 
-        - name: 克隆源代码
+    - name: 克隆源代码
       working-directory: /workdir
       run: |
         df -hT $PWD
@@ -61,7 +61,21 @@ jobs:
         fi
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
-        - name: 加载自定义配置
+    - name: 加载自定义 feeds
+      run: |
+        if [ -f $DIY_P1_SH ]; then
+          chmod +x $DIY_P1_SH
+          cd openwrt
+          $GITHUB_WORKSPACE/$DIY_P1_SH
+        fi
+
+    - name: 更新 feeds
+      run: |
+        cd openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+
+    - name: 加载自定义配置
       run: |
         if [ -d files ]; then
           mv files openwrt/files
@@ -75,58 +89,44 @@ jobs:
           $GITHUB_WORKSPACE/$DIY_P2_SH
         fi
 
-    - name: 更新 feeds
-      run: cd openwrt && ./scripts/feeds update -a
-
-    - name: 安装 feeds
-      run: cd openwrt && ./scripts/feeds install -a
-
-    - name: 加载自定义配置
-      run: |
-        [ -e files ] && mv files openwrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-        chmod +x $DIY_P2_SH
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
-
-    - name: 下载软件包
-      id: package
+    - name: 编译固件
+      id: build
       run: |
         cd openwrt
         make defconfig
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
-        find dl -size -1024c -exec rm -f {} \;
-
-    - name: 编译固件
-      id: compile
-      run: |
-        cd openwrt
         make -j$(nproc) || make -j1 V=s
-        echo "status=success" >> $GITHUB_OUTPUT
+        echo "::set-output name=status::success"
 
-    - name: 整理文件
-      id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled() && steps.compile.outputs.status == 'success'
-      run: |
-        cd openwrt/bin/targets/*/*
-        if [ -d . ]; then
-          if [ "$(ls -A .)" ]; then
-            rm -rf packages
-            echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-            echo "status=success" >> $GITHUB_OUTPUT
-
-    - name: 上传固件目录
+    - name: 上传构建结果
+      if: steps.build.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       uses: actions/upload-artifact@main
-      if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
-        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: ${{ env.FIRMWARE }}
+        name: OpenWrt
+        path: openwrt/bin
 
-    - name: 上传固件到发布
+    - name: 创建发布
+      id: create_release
+      if: env.UPLOAD_RELEASE == 'true' && github.event_name != 'workflow_dispatch'
       uses: softprops/action-gh-release@v1
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled() && steps.organize.outputs.status == 'success'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        files: ${{ env.FIRMWARE }}/*
+        tag_name: ${{ github.ref }}
+        body: |
+          这是一个使用 GitHub Actions 自动编译的 OpenWrt 固件。
+          
+          - 固件包含以下功能:
+            - 基于 ${{ env.REPO_BRANCH }} 分支编译
+            - 包含自定义设置(diy-part1.sh 和 diy-part2.sh)
+          
+          请根据您的硬件型号选择合适的固件。
+        files: openwrt/bin/*
+
+    - name: 上传构建日志
+      if: failure()
+      uses: actions/upload-artifact@main
+      with:
+        name: build-log
+        path: openwrt/logs
