@@ -1,13 +1,20 @@
 name: OpenWrt固件编译
 
+on:
+  repository_dispatch:
+  workflow_dispatch:
+
 env:
-REPO_URL: https://github.com/istoreos/istoreos
-REPO_BRANCH: master
-CONFIG_FILE: .config
-DIY_SCRIPT_1: diy-part1.sh
-DIY_SCRIPT_2: diy-part2.sh
-ARTIFACT_NAME: OpenWrt
-WEBHOOK_URL: ${{ secrets.TELEGRAM_WEBHOOK }}
+  REPO_URL: https://github.com/istoreos/istoreos
+  REPO_BRANCH: istoreos-22.03
+  FEEDS_CONF: feeds.conf.default
+  CONFIG_FILE: .config
+  DIY_P1_SH: diy-part1.sh
+  DIY_P2_SH: diy-part2.sh
+  UPLOAD_BIN_DIR: false
+  UPLOAD_FIRMWARE: true
+  UPLOAD_RELEASE: true
+  TZ: Asia/Shanghai
 
 jobs:
 
