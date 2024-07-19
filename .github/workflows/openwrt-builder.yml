@@ -2,8 +2,8 @@ name: OpenWrt固件编译
 
 on:
 workflow_dispatch:
-#schedule:
-#- cron: '0 2 * * 0'
+schedule:
+- cron: '0 2 * * 0'
 
 env:
 REPO_URL: https://github.com/istoreos/istoreos
