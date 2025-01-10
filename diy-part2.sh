@@ -21,3 +21,23 @@ sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/M
 
 # 修改主机名
 sed -i 's/OpenWrt/NITT/g' package/base-files/files/bin/config_generate
+
+# 设置编译作者信息
+FILE_PATH="/etc/openwrt_release"
+NEW_DESCRIPTION="04543473 by NNITT"
+sed -i "s/DISTRIB_DESCRIPTION='[^']*'/DISTRIB_DESCRIPTION='$NEW_DESCRIPTION'/" "$FILE_PATH"
+
+# 设置主机名映射，解决安卓原生 TV 无法联网的问题
+uci add dhcp domain
+uci set "dhcp.@domain[-1].name=time.android.com"
+uci set "dhcp.@domain[-1].ip=203.107.6.88"
+
+# 根据网卡数量配置网络
+count=0
+for iface in /sys/class/net/*; do
+  iface_name=$(basename "$iface")
+  # 检查是否为物理网卡（排除回环设备和无线设备）
+  if [ -e "$iface/device" ] && echo "$iface_name" | grep -Eq '^eth|^en'; then
+    count=$((count + 1))
+  fi
+done
