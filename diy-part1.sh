@@ -21,3 +21,6 @@ echo 'src-git adguardhome https://github.com/rufengsuixing/luci-app-adguardhome'
 echo 'src-git mosdns https://github.com/sbwml/luci-app-mosdns' >>feeds.conf.default
 #echo 'src/gz openwrt_kiddin9 https://dl.openwrt.ai/packages-23.05/x86_64/kiddin9/' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
+# Lienol/openwrt-package
+sed -i '$a src-git lienol https://github.com/Lancenas/lienol-openwrt-package.git' feeds.conf.default
+sed -i '$a src-git xiaorouji https://github.com/xiaorouji/openwrt-passwall-packages.git' feeds.conf.default
