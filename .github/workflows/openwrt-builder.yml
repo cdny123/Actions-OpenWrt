@@ -40,7 +40,7 @@ jobs:
           libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch \
           pkgconf python2.7 python3 python3-pyelftools python3-setuptools qemu-utils \
           rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip \
-          vim wget xmlto xxd zlib1g-dev hysteria # 添加 hysteria 依赖
+          vim wget xmlto xxd zlib1g-dev
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
@@ -81,6 +81,14 @@ jobs:
         make defconfig
         make download -j8
         find dl -size -1024c -exec rm -f {} \;
+
+    - name: Compile Hysteria
+      run: |
+        cd openwrt
+        git clone https://github.com/HyNetwork/hysteria.git
+        cd hysteria
+        go build -o hysteria ./cmd/hysteria
+        mv hysteria ../bin/
 
     - name: Compile the firmware
       id: compile
