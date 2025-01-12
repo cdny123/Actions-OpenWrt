@@ -12,7 +12,7 @@ jobs:
     name: delete-workflow-runs
 # 设置保留的天数，可以根据需要修改
     env:
-      RETAIN_DAYS: 30
+      RETAIN_DAYS: 1
       
     steps:
     
