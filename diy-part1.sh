@@ -16,7 +16,6 @@
 sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
 
 # 添加 openwrt-package
-echo "添加 openwrt-package 源..."
 echo 'src-git helloworld https://github.com/fw876/helloworld.git' >>feeds.conf.default
 echo 'src-git openwrt-package https://github.com/cdny123/openwrt-package.git' >>feeds.conf.default
 
