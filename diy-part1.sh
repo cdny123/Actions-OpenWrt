@@ -10,12 +10,25 @@
 # See /LICENSE for more information.
 #
 
+#!/bin/bash
+
 # 确保脚本在失败时退出
 set -e
+
+# 检查 feeds.conf.default 的语法
+function check_feeds_conf {
+    if ! grep -q '^src-git' feeds.conf.default; then
+        echo "feeds.conf.default 文件格式错误，请检查。"
+        exit 1
+    fi
+}
 
 # Uncomment a feed source
 echo "取消注释 helloworld 源..."
 sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
+
+# 检查 feeds.conf.default 文件格式
+check_feeds_conf
 
 # 添加 openwrt-package
 echo "添加 openwrt-package 源..."
@@ -34,3 +47,4 @@ git clone https://github.com/lq-wq/luci-app-quickstart.git package/luci-app-quic
 git clone https://github.com/sirpdboy/luci-app-lucky.git package/lucky      # luci-app-lucky 端口转发
 
 echo "所有操作完成。"
+
