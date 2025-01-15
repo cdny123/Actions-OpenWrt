@@ -114,6 +114,16 @@ jobs:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: openwrt/bin
 
+    - name: List target directory contents
+      run: |
+        if [ -d openwrt/bin/targets ]; then
+          echo "Contents of openwrt/bin/targets:"
+          ls -R openwrt/bin/targets
+        else
+          echo "Directory openwrt/bin/targets does not exist."
+          exit 1
+        fi
+
     - name: Organize files
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
@@ -121,21 +131,11 @@ jobs:
         echo "Checking for target directory..."
         if [ -d openwrt/bin/targets ]; then
           echo "Target directory exists."
-          cd openwrt/bin/targets/*/*
+          cd openwrt/bin/targets/*/* || { echo "Failed to change directory"; exit 1; }
           
-          if [ $? -ne 0 ]; then
-            echo "Failed to change directory. Current directory: $(pwd)"
-            exit 1
-          fi
-
-          echo "Current directory after cd: $(pwd)"
+          echo "Current directory: $(pwd)"
           echo "Removing packages directory if it exists..."
-          rm -rf packages
-          
-          if [ $? -ne 0 ]; then
-            echo "Failed to remove packages directory."
-            exit 1
-          fi
+          rm -rf packages || { echo "Failed to remove packages directory"; exit 1; }
 
           echo "Setting FIRMWARE environment variable."
           echo "FIRMWARE=$PWD" >> $GITHUB_ENV
@@ -145,11 +145,6 @@ jobs:
           echo "status=failed" >> $GITHUB_ENV  # 输出状态为失败
           exit 1  # 退出并返回错误状态
         fi
-
-    - name: List target directory contents
-      run: |
-        echo "Contents of openwrt/bin/targets:"
-        ls -R openwrt/bin/targets
         
     - name: Upload firmware directory
       uses: actions/upload-artifact@v3  # 更新为最新版本
