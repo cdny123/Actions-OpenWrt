@@ -125,7 +125,8 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT
         else
           echo "Target directory does not exist" >> $GITHUB_OUTPUT
-          exit 1
+          echo "status=failed" >> $GITHUB_OUTPUT  # 添加状态输出
+          exit 1  # 退出并返回错误状态
         fi
 
     - name: Upload firmware directory
