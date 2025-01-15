@@ -32,12 +32,8 @@ check_feeds_conf
 
 # 添加 openwrt-package
 echo "添加 openwrt-package 源..."
-if ! grep -q "src-git openwrt-package" feeds.conf.default; then
-    sed -i '$a src-git openwrt-package https://github.com/cdny123/openwrt-package.git' feeds.conf.default
-    echo "成功添加 openwrt-package 源。"
-else
-    echo "openwrt-package 源已存在。"
-fi
+src-git helloworld https://github.com/fw876/helloworld.git cat feeds.conf.default
+src-git openwrt-package https://github.com/cdny123/openwrt-package.git cat feeds.conf.default
 
 # 添加 APP 插件
 echo "克隆 APP 插件..."
