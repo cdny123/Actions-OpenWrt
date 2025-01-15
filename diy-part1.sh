@@ -10,23 +10,27 @@
 # See /LICENSE for more information.
 #
 
+# 确保脚本在失败时退出
+set -e
+
 # Uncomment a feed source
+echo "取消注释 helloworld 源..."
 sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
 
-# Add a feed source
-#echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
-#echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
-#echo 'src-git openclash https://github.com/vernesong/OpenClash' >>feeds.conf.default
-#echo 'src-git adguardhome https://github.com/rufengsuixing/luci-app-adguardhome' >>feeds.conf.default
-#echo 'src-git mosdns https://github.com/sbwml/luci-app-mosdns' >>feeds.conf.default
-#echo 'src/gz openwrt_kiddin9 https://dl.openwrt.ai/packages-23.05/x86_64/kiddin9/' >>feeds.conf.default
-#echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
-# 添加openwrt-package
-sed -i '$a src-git openwrt-package https://github.com/cdny123/openwrt-package.git' feeds.conf.default
-#sed -i '$a src-git lienol https://github.com/Lancenas/lienol-openwrt-package.git' feeds.conf.default
-#sed -i '$a src-git xiaorouji https://github.com/xiaorouji/openwrt-passwall-packages.git' feeds.conf.default
-# 添加APP插件
+# 添加 openwrt-package
+echo "添加 openwrt-package 源..."
+if ! grep -q "src-git openwrt-package" feeds.conf.default; then
+    sed -i '$a src-git openwrt-package https://github.com/cdny123/openwrt-package.git' feeds.conf.default
+    echo "成功添加 openwrt-package 源。"
+else
+    echo "openwrt-package 源已存在。"
+fi
+
+# 添加 APP 插件
+echo "克隆 APP 插件..."
 git clone https://github.com/sirpdboy/chatgpt-web.git package/luci-app-chatgpt      # chatgpt-web
 git clone https://github.com/sirpdboy/luci-theme-kucat.git package/luci-app-kucat   # kucat主题
 git clone https://github.com/lq-wq/luci-app-quickstart.git package/luci-app-quickstart   # iStoreOS-web
 git clone https://github.com/sirpdboy/luci-app-lucky.git package/lucky      # luci-app-lucky 端口转发
+
+echo "所有操作完成。"
