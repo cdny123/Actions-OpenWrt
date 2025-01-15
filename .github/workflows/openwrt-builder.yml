@@ -122,10 +122,10 @@ jobs:
           cd openwrt/bin/targets/*/*
           rm -rf packages
           echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-          echo "status=success" >> $GITHUB_ENV  # 使用 GITHUB_ENV 传递状态
+          echo "status=success" >> $GITHUB_ENV  # 输出状态为成功
         else
-          echo "Target directory does not exist" >> $GITHUB_ENV  # 输出到 GITHUB_ENV
-          echo "status=failed" >> $GITHUB_ENV  # 添加状态输出
+          echo "Target directory does not exist"  # 输出错误消息
+          echo "status=failed" >> $GITHUB_ENV  # 输出状态为失败
           exit 1  # 退出并返回错误状态
         fi
 
