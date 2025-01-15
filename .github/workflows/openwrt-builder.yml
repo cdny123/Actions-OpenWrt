@@ -10,6 +10,8 @@
 # See /LICENSE for more information.
 #
 
+name: Build-openwrt
+
 on:
   repository_dispatch:
   workflow_dispatch:
