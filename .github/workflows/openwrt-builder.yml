@@ -123,13 +123,21 @@ jobs:
           echo "Target directory exists."
           cd openwrt/bin/targets/*/*
           
-          # 确认切换目录成功
           if [ $? -ne 0 ]; then
-            echo "Failed to change directory."
+            echo "Failed to change directory. Current directory: $(pwd)"
             exit 1
           fi
 
+          echo "Current directory after cd: $(pwd)"
+          echo "Removing packages directory if it exists..."
           rm -rf packages
+          
+          if [ $? -ne 0 ]; then
+            echo "Failed to remove packages directory."
+            exit 1
+          fi
+
+          echo "Setting FIRMWARE environment variable."
           echo "FIRMWARE=$PWD" >> $GITHUB_ENV
           echo "status=success" >> $GITHUB_ENV
         else
@@ -138,6 +146,11 @@ jobs:
           exit 1  # 退出并返回错误状态
         fi
 
+    - name: List target directory contents
+      run: |
+        echo "Contents of openwrt/bin/targets:"
+        ls -R openwrt/bin/targets
+        
     - name: Upload firmware directory
       uses: actions/upload-artifact@v3  # 更新为最新版本
       if: steps.organize.outputs.status == 'success' && !cancelled()
