@@ -118,13 +118,15 @@ jobs:
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
+        echo "Checking for target directory..."
         if [ -d openwrt/bin/targets ]; then
+          echo "Target directory exists."
           cd openwrt/bin/targets/*/*
           rm -rf packages
           echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-          echo "status=success" >> $GITHUB_ENV  # 输出状态为成功
+          echo "status=success" >> $GITHUB_ENV
         else
-          echo "Target directory does not exist"  # 输出错误消息
+          echo "Target directory does not exist."  # 输出错误消息
           echo "status=failed" >> $GITHUB_ENV  # 输出状态为失败
           exit 1  # 退出并返回错误状态
         fi
