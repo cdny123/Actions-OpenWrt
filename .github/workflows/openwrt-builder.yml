@@ -88,6 +88,13 @@ jobs:
           cd openwrt
           $GITHUB_WORKSPACE/$DIY_P2_SH
 
+      - name: Install Go
+        run: |
+          wget https://golang.org/dl/go1.22.linux-amd64.tar.gz
+          sudo tar -C /usr/local -xzf go1.22.linux-amd64.tar.gz
+          echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.bashrc
+          source ~/.bashrc
+    
       - name: Download package
         id: package
         run: |
