@@ -18,6 +18,10 @@ sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
 # 添加 openwrt-package
 echo 'src-git cdny https://github.com/cdny123/openwrt-package1.git' >>feeds.conf.default
 
+# 更换golang版本
+rm -rf ${HOME_PATH}/feeds/packages/lang/golang
+git clone https://github.com/sbwml/packages_lang_golang -b 23.x ${HOME_PATH}/feeds/packages/lang/golang
+
 # 添加 APP 插件
 git clone https://github.com/sirpdboy/chatgpt-web.git package/luci-app-chatgpt      # chatgpt-web
 git clone https://github.com/sirpdboy/luci-theme-kucat.git package/luci-app-kucat   # kucat主题
