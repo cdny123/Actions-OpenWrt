@@ -15,6 +15,16 @@
 # Uncomment a feed source
 sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
 
+# go版本到1.22后，编译碰到的问题
+rm -rf feeds/smpackage/{base-files,dnsmasq,firewall*,fullconenat,libnftnl,nftables,ppp,opkg,ucl,upx,vsftpd-alt,miniupnpd-iptables,wireless-regdb}
+rm -rf feeds/luci/applications/luci-app-mosdns
+rm -rf feeds/luci/applications/luci-app-smartdns
+rm -rf feeds/packages/net/{alist,adguardhome,mosdns,smartdns}
+rm -rf feeds/smpackage/luci-app-adguardhome
+rm -rf feeds/smpackage/luci-app-bypass
+rm -rf feeds/packages/lang/golang
+git clone https://github.com/kenzok8/golang feeds/packages/lang/golang
+
 # 添加 openwrt-package
 echo 'src-git cdny https://github.com/cdny123/openwrt-package1.git' >>feeds.conf.default
 
