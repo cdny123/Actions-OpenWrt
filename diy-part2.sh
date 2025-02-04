@@ -14,10 +14,10 @@
 sed -i 's/192.168.1.1/192.168.6.1/g' package/base-files/files/bin/config_generate
 
 # 内核版本设置
-sed -i 's/KERNEL_PATCHVER:=5.15/KERNEL_PATCHVER:=6.6/g' openwrt/target/linux/x86/Makefile
+#sed -i 's/KERNEL_PATCHVER:=5.15/KERNEL_PATCHVER:=6.6/g' openwrt/target/linux/x86/Makefile
 
 # 修改默认主题
-sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
+#sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
 
 # 修改主机名
 sed -i 's/OpenWrt/NITT/g' package/base-files/files/bin/config_generate
@@ -26,6 +26,19 @@ sed -i 's/OpenWrt/NITT/g' package/base-files/files/bin/config_generate
 FILE_PATH="/etc/openwrt_release"
 NEW_DESCRIPTION="04543473 by NNITT"
 sed -i "s/DISTRIB_DESCRIPTION='[^']*'/DISTRIB_DESCRIPTION='$NEW_DESCRIPTION'/" "$FILE_PATH"
+
+# 设置默认主题为 luci-theme-argon
+sed -i 's/^# CONFIG_PACKAGE_luci-theme-argon is not set/CONFIG_PACKAGE_luci-theme-argon=y/' .config
+sed -i 's/^CONFIG_PACKAGE_luci-theme-bootstrap=y/# CONFIG_PACKAGE_luci-theme-bootstrap is not set/' .config
+
+# 添加 luci-app-adguardhome 和 luci-app-openclash
+echo "CONFIG_PACKAGE_luci-app-adguardhome=y" >> .config
+echo "CONFIG_PACKAGE_luci-app-openclash=y" >> .config
+
+# 选择 X86_64 核心
+make target/linux/x86/compile
+make target/linux/x86/image/generic
+
 
 # 设置主机名映射，解决安卓原生 TV 无法联网的问题
 uci add dhcp domain
