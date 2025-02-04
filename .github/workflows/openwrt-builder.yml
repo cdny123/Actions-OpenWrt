@@ -75,6 +75,11 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
+    - name: Clean previous build
+      run: |
+        cd openwrt
+        make dirclean
+
     - name: Compile the firmware
       id: compile
       run: |
