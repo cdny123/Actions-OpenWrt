@@ -1,149 +1,164 @@
 # Copyright (C) 2024 YourName
 #
-name: OpenWrt Custom Builder
+name: OpenWrt Builder
 
 on:
+  repository_dispatch:
   workflow_dispatch:
-    inputs:
-      kernel:
-        description: 'Kernel Version (ex. openwrt-24.10, openwrt-23.05)'
-        required: true
-        default: 'openwrt-24.10'
-        type: string
-      rootfs_size:
-        description: "ROOTFS Size, min 640 (756, 1024, 2048, etc)"
-        required: true
-        default: '1024'
-        type: string
-      fwinfo:
-        description: 'Firmware Information'
-        required: true
-        default: 'Custom OpenWrt Build'
-        type: string
 
-jobs: 
-  build_firmware:
-    permissions:
-      contents: write
-    name: Build OpenWrt Firmware
-    runs-on: ubuntu-latest
+env:
+  REPO_URL: https://github.com/openwrt/openwrt
+  REPO_BRANCH: openwrt-24.10
+  FEEDS_CONF: feeds.conf.default
+  CONFIG_FILE: .config
+  DIY_P1_SH: diy-part1.sh
+  DIY_P2_SH: diy-part2.sh
+  UPLOAD_BIN_DIR: false
+  UPLOAD_FIRMWARE: true
+  UPLOAD_RELEASE: true
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
     steps:
-      
-      - name: Checkout OpenWrt Repository
-        uses: actions/checkout@v4
-        with:
-          repository: openwrt/openwrt
-          ref: openwrt-${{ inputs.kernel }}
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get -y install build-essential libncurses5-dev zlib1g-dev gawk flex quilt git wget libssl-dev xsltproc libxml-parser-perl mercurial bzr ecj cvs unzip python3 python3-pip python3-setuptools python3-yaml python3-jinja2 rsync subversion libelf-dev cmake ninja-build
-          sudo pip3 install pyyaml jinja2
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+        sudo docker image prune --all --force
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install -y \
+          binutils bzip2 diff find flex gawk gcc-11+ getopt grep install libc-dev libz-dev \
+          make4.1+ perl python3.7+ rsync subversion unzip which
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+        sudo timedatectl set-timezone "$TZ"
+        sudo mkdir -p /workdir
+        sudo chown $USER:$GROUPS /workdir
 
-      - name: Update Feeds
-        run: |
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
+    - name: Clone source code
+      working-directory: /workdir
+      run: |
+        df -hT $PWD
+        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
-      - name: Configure Build Environment
-        run: |
-          cp .config.example .config
-          sed -i 's/^# CONFIG_TARGET_x86_64_generic is not set/CONFIG_TARGET_x86_64_generic=y/' .config
-          sed -i 's/^# CONFIG_TARGET_x86_64 is not set/CONFIG_TARGET_x86_64=y/' .config
-          sed -i 's/^# CONFIG_TARGET_x86 is not set/CONFIG_TARGET_x86=y/' .config
-          sed -i 's/^# CONFIG_TARGET_IMAGES_GZIP is not set/CONFIG_TARGET_IMAGES_GZIP=y/' .config
-          sed -i 's/^# CONFIG_TARGET_IMAGES_PAD is not set/CONFIG_TARGET_IMAGES_PAD=y/' .config
-          sed -i 's/^# CONFIG_TARGET_IMAGES_PAD_EXTRA is not set/CONFIG_TARGET_IMAGES_PAD_EXTRA=y/' .config
-          sed -i 's/^# CONFIG_TARGET_IMAGES_PAD_TO is not set/CONFIG_TARGET_IMAGES_PAD_TO=${{ inputs.rootfs_size }}M/' .config
+    - name: Load custom feeds
+      run: |
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P1_SH
 
-      - name: Add Custom Packages
-        run: |
-          echo 'CONFIG_PACKAGE_luci-theme-argon=y' >> .config
-          echo 'CONFIG_PACKAGE_ttyd=y' >> .config
-          echo 'CONFIG_PACKAGE_docker=y' >> .config
-          echo 'CONFIG_PACKAGE_docker-compose=y' >> .config
-          echo 'CONFIG_PACKAGE_miniupnpd=y' >> .config
-          echo 'CONFIG_PACKAGE_luci-app-kms=y' >> .config
-          echo 'CONFIG_PACKAGE_luci-app-passwall=y' >> .config
-          echo 'CONFIG_PACKAGE_luci-app-adguardhome=y' >> .config
-          echo 'CONFIG_PACKAGE_luci-app-mosdns=y' >> .config
-          echo 'CONFIG_PACKAGE_luci-app-alist=y' >> .config
-          echo 'CONFIG_PACKAGE_luci-app-openclash=y' >> .config
-          echo 'CONFIG_PACKAGE_luci-app-autotimeset=y' >> .config
-          echo 'CONFIG_PACKAGE_luci-app-store=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-core=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb2=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-storage=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-asix=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-rndis=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-cdc-ether=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-pci=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-pci-generic=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-pci-uhci=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-pci-ohci=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-pci-ehci=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-pci-xhci=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-serial=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-serial-option=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-serial-wwan=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-ipheth=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-qmi-wwan=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-rndis=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-cdc-ether=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-cdc-acm=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-cdc-mbim=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-cdc-wdm=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-cdc-ncm=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-cdc-subset=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-dm9601=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-gl620a=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-hso=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-kaweth=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-kalmia=y' >> .config
-          echo 'CONFIG_PACKAGE_kmod-usb-net-kaweth=y' >> .config
+    - name: Update feeds
+      run: cd openwrt && ./scripts/feeds update -a
 
-      - name: Modify LAN IP Address
-        run: |
-          echo 'uci set network.lan.ipaddr="192.168.6.1"' >> files/etc/uci-defaults/99_custom_defaults
+    - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -a
 
-      - name: Add Author Information
-        run: |
-          echo 'echo "Compiled by YourName" > /etc/openwrt_release_custom' >> files/etc/uci-defaults/99_custom_defaults
+    - name: Load custom configuration
+      run: |
+        [ -e files ] && mv files openwrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        chmod +x $DIY_P2_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
 
-      - name: Build Firmware
-        run: |
-          make -j$(nproc) V=s
+    - name: Download package
+      id: package
+      run: |
+        cd openwrt
+        make defconfig
+        make download -j8
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
 
-      - name: Create Artifact Directory
-        run: |
-          mkdir -p artifact
-          cp bin/targets/x86/64/*.img.gz artifact/
+    - name: Clean previous build
+      run: |
+        cd openwrt
+        make dirclean
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: openwrt_firmware
-          path: artifact/*
+    - name: Ensure /tmp directory is writable
+      run: |
+        sudo chmod 1777 /tmp
+        sudo chown $USER:$GROUPS /tmp
 
-      - name: Upload Release Asset
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: artifact/*
-          tag: v${{ inputs.kernel }}
-          file_glob: true
-          overwrite: true
-          body: |
-            ## OpenWRT Release for x86_64 devices
-            ULO-Builder Release from Github Workflow
-            ### OpenWrt Image Information
-            - Firmware Details : 
-              - Devices type : x86_64
-              - Kernel version : ${{ inputs.kernel }}
-              - ROOTFS Size : ${{ inputs.rootfs_size }}M
-            - Firmware Information : 
-              - ${{ inputs.fwinfo }}
-            - Compiled by : 04543473
-            - LAN IP Address : 192.168.6.1
+    - name: Check space usage before compile
+      run: df -hT
+
+    - name: Compile the firmware
+      id: compile
+      run: |
+        cd openwrt
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc) V=sc || make -j1 V=sc
+        echo "status=success" >> $GITHUB_OUTPUT
+        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
+        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
+        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+
+    - name: Check space usage after compile
+      if: (!cancelled())
+      run: df -hT
+
+    - name: Upload bin directory
+      uses: actions/upload-artifact@v4
+      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+      with:
+        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: openwrt/bin
+
+    - name: Organize files
+      id: organize
+      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+      run: |
+        cd openwrt/bin/targets/*/*
+        rm -rf packages
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Upload firmware directory
+      uses: actions/upload-artifact@v4
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: ${{ env.FIRMWARE }}
+
+    - name: Generate release tag
+      id: tag
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      run: |
+        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+        touch release.txt
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Upload firmware to release
+      uses: softprops/action-gh-release@v1
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        body_path: release.txt
+        files: ${{ env.FIRMWARE }}/*
+
+    - name: Delete workflow runs
+      uses: Mattraks/delete-workflow-runs@main
+      with:
+        retain_days: 0
+        keep_minimum_runs: 2
+
+    - name: Remove old Releases
+      uses: dev-drprasad/delete-older-releases@main
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      with:
+        keep_latest: 3
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
