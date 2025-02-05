@@ -145,5 +145,5 @@ jobs:
               - ROOTFS Size : ${{ inputs.rootfs_size }}M
             - Firmware Information : 
               - ${{ inputs.fwinfo }}
-            - Compiled by : YourName
+            - Compiled by : 04543473
             - LAN IP Address : 192.168.6.1
