@@ -1,0 +1,163 @@
+# Copyright (C) 2024 YourName
+#
+name: OpenWrt Custom Builder
+
+on:
+  workflow_dispatch:
+    inputs:
+      kernel:
+        description: 'Kernel Version (ex. 24.10.0, 23.05)'
+        required: true
+        default: '24.10.0'
+        type: string
+      rootfs_size:
+        description: "ROOTFS Size, min 640 (756, 1024, 2048, etc)"
+        required: true
+        default: '1024'
+        type: string
+      fwinfo:
+        description: 'Firmware Information'
+        required: true
+        default: 'Custom OpenWrt Build'
+        type: string
+
+jobs: 
+  build_firmware:
+    permissions:
+      contents: write
+    name: Build OpenWrt Firmware
+    runs-on: ubuntu-latest
+    steps:
+      
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Pull Docker Image
+        run: docker pull openwrt/imagebuilder:x86-64-${{ inputs.kernel }}
+
+      - name: Prepare Build Environment
+        run: |
+          mkdir -p build_dir
+          cd build_dir
+          docker run --rm -v $(pwd):/build openwrt/imagebuilder:x86-64-${{ inputs.kernel }} \
+            make image PROFILE=x86_64-generic \
+            PACKAGES="\
+              luci-theme-argon \
+              ttyd \
+              docker \
+              docker-compose \
+              miniupnpd \
+              kms \
+              luci-app-passwall \
+              luci-app-adguardhome \
+              luci-app-mosdns \
+              luci-app-alist \
+              luci-app-openclash \
+              luci-app-autotimeset \
+              luci-app-store \
+              kmod-usb-core kmod-usb2 kmod-usb-storage kmod-usb-net kmod-usb-net-asix kmod-usb-net-rndis kmod-usb-net-cdc-ether \
+              kmod-pci kmod-pci-generic kmod-pci-uhci kmod-pci-ohci kmod-pci-ehci kmod-pci-xhci \
+              kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-wwan \
+              kmod-usb-net-ipheth kmod-usb-net-qmi-wwan kmod-usb-net-rndis kmod-usb-net-cdc-ether \
+              kmod-usb-net-cdc-acm kmod-usb-net-cdc-mbim kmod-usb-net-cdc-wdm kmod-usb-net-cdc-ncm \
+              kmod-usb-net-cdc-subset kmod-usb-net-dm9601 kmod-usb-net-gl620a kmod-usb-net-hso \
+              kmod-usb-net-kaweth kmod-usb-net-kalmia kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth \
+              kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net-kaweth kmod-usb-net
