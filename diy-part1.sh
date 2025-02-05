@@ -21,7 +21,7 @@ echo "src-git passwall https://github.com/xiaorouji/openwrt-passwall" >> feeds.c
 ./scripts/feeds install -a
 
 # 设置内核版本为6.6
-sed -i 's/^# CONFIG_KERNEL_PATCHVER=.*/CONFIG_KERNEL_PATCHVER="6.6"/' target/linux/x86/config-6.6
+sed -i 's/^# CONFIG_KERNEL_PATCHVER=.*/CONFIG_KERNEL_PATCHVER="6.6"/' target/linux/x8ag6/config-6.6
 
 # go版本到1.22后，编译碰到的问题
 rm -rf feeds/packages/lang/golang
