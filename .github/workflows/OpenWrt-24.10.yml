@@ -1,6 +1,6 @@
 # Copyright (C) 2024 YourName
 #
-name: OpenWrt Builder
+name: OpenWrt 24.10
 
 on:
   repository_dispatch:
