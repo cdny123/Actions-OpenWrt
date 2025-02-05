@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       kernel:
-        description: 'Kernel Version (ex. 24.10.0, 23.05)'
+        description: 'Kernel Version (ex. openwrt-24.10, openwrt-23.05)'
         required: true
-        default: '24.10.0'
+        default: 'openwrt-24.10'
         type: string
       rootfs_size:
         description: "ROOTFS Size, min 640 (756, 1024, 2048, etc)"
