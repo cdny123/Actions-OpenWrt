@@ -1,42 +1,56 @@
 #!/bin/bash
-#========================================================================================================================
-# https://github.com/ophub/amlogic-s9xxx-openwrt
-# Description: Automatically Build OpenWrt
-# Function: Diy script (After Update feeds, Modify the default IP, hostname, theme, add/remove software packages, etc.)
-# Source code repository: https://github.com/openwrt/openwrt / Branch: main
-#========================================================================================================================
-
-# ------------------------------- Main source started -------------------------------
 #
-# Add the default password for the 'root' user（Change the empty password to 'password'）
-sed -i 's/root:::0:99999:7:::/root:$1$V4UetPzk$CYXluq4wUazHjmCDBCqXF.::0:99999:7:::/g' package/base-files/files/etc/shadow
-
-# Set etc/openwrt_release
-sed -i "s|DISTRIB_REVISION='.*'|DISTRIB_REVISION='R$(date +%Y.%m.%d)'|g" package/base-files/files/etc/openwrt_release
-echo "DISTRIB_SOURCECODE='official'" >>package/base-files/files/etc/openwrt_release
-
-# Modify default IP（FROM 192.168.1.1 CHANGE TO 192.168.31.4）
-# sed -i 's/192.168.1.1/192.168.31.4/g' package/base-files/files/bin/config_generate
+# https://github.com/P3TERX/Actions-OpenWrt
+# File name: diy-part2.sh
+# Description: OpenWrt DIY script part 2 (After Update feeds)
 #
-# ------------------------------- Main source ends -------------------------------
-
-# ------------------------------- Other started -------------------------------
+# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
 #
-# Add luci-app-amlogic
-svn co https://github.com/ophub/luci-app-amlogic/trunk/luci-app-amlogic package/luci-app-amlogic
-
-# coolsnowwolf default software package replaced with Lienol related software package
-# rm -rf feeds/packages/utils/{containerd,libnetwork,runc,tini}
-# svn co https://github.com/Lienol/openwrt-packages/trunk/utils/{containerd,libnetwork,runc,tini} feeds/packages/utils
-
-# Add third-party software packages (The entire repository)
-# git clone https://github.com/libremesh/lime-packages.git package/lime-packages
-# Add third-party software packages (Specify the package)
-# svn co https://github.com/libremesh/lime-packages/trunk/packages/{shared-state-pirania,pirania-app,pirania} package/lime-packages/packages
-# Add to compile options (Add related dependencies according to the requirements of the third-party software package Makefile)
-# sed -i "/DEFAULT_PACKAGES/ s/$/ pirania-app pirania ip6tables-mod-nat ipset shared-state-pirania uhttpd-mod-lua/" target/linux/armvirt/Makefile
-
-# Apply patch
-# git apply ../config/patches/{0001*,0002*}.patch --directory=feeds/luci
+# This is free software, licensed under the MIT License.
+# See /LICENSE for more information.
 #
-# ------------------------------- Other ends -------------------------------
+
+# 修改默认 IP
+sed -i 's/192.168.1.1/192.168.6.1/g' package/base-files/files/bin/config_generate
+
+# 内核版本设置
+#sed -i 's/KERNEL_PATCHVER:=5.15/KERNEL_PATCHVER:=6.6/g' openwrt/target/linux/x86/Makefile
+
+# 修改默认主题
+#sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
+
+# 修改主机名
+sed -i 's/OpenWrt/NITT/g' package/base-files/files/bin/config_generate
+
+# 设置编译作者信息
+FILE_PATH="/etc/openwrt_release"
+NEW_DESCRIPTION="04543473 by NNITT"
+sed -i "s/DISTRIB_DESCRIPTION='[^']*'/DISTRIB_DESCRIPTION='$NEW_DESCRIPTION'/" "$FILE_PATH"
+
+# 设置默认主题为 luci-theme-argon
+sed -i 's/^# CONFIG_PACKAGE_luci-theme-argon is not set/CONFIG_PACKAGE_luci-theme-argon=y/' .config
+sed -i 's/^CONFIG_PACKAGE_luci-theme-bootstrap=y/# CONFIG_PACKAGE_luci-theme-bootstrap is not set/' .config
+
+# 添加 luci-app-adguardhome 和 luci-app-openclash
+echo "CONFIG_PACKAGE_luci-app-adguardhome=y" >> .config
+echo "CONFIG_PACKAGE_luci-app-openclash=y" >> .config
+
+# 选择 X86_64 核心
+make target/linux/x86/compile
+make target/linux/x86/image/generic
+
+
+# 设置主机名映射，解决安卓原生 TV 无法联网的问题
+uci add dhcp domain
+uci set "dhcp.@domain[-1].name=time.android.com"
+uci set "dhcp.@domain[-1].ip=203.107.6.88"
+
+# 根据网卡数量配置网络
+count=0
+for iface in /sys/class/net/*; do
+  iface_name=$(basename "$iface")
+  # 检查是否为物理网卡（排除回环设备和无线设备）
+  if [ -e "$iface/device" ] && echo "$iface_name" | grep -Eq '^eth|^en'; then
+    count=$((count + 1))
+  fi
+done
