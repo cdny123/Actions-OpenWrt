@@ -13,7 +13,7 @@
 #!/bin/bash
 
 # 设置内核版本为6.6
-echo "src-git kernel https://git.openwrt.org/feed/linux.git^kernel-6.6" >> feeds.conf.default
+echo "src-git kernel https://git.openwrt.org/feed/linux.git;kernel-6.6" >> feeds.conf.default
 ./scripts/feeds update kernel
 ./scripts/feeds install -a -p kernel
 
