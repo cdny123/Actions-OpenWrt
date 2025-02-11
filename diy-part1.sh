@@ -12,11 +12,6 @@
 
 #!/bin/bash
 
-# 设置内核版本为6.6
-echo "src-git kernel https://git.openwrt.org/feed/linux.git;kernel-6.6" >> feeds.conf.default
-./scripts/feeds update kernel
-./scripts/feeds install -a -p kernel
-
 # 添加 luci-app-adguardhome 和 luci-app-openclash 及其核心组件
 echo "src-git helloworld https://github.com/fw876/helloworld" >> feeds.conf.default
 ./scripts/feeds update -a
