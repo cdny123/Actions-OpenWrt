@@ -19,7 +19,6 @@ echo "src-git kernel https://git.openwrt.org/feed/linux.git^kernel-6.6" >> feeds
 
 # 添加 luci-app-adguardhome 和 luci-app-openclash 及其核心组件
 echo "src-git helloworld https://github.com/fw876/helloworld" >> feeds.conf.default
-echo "src-git small https://github.com/kenzok8/small" >> feeds.conf.default
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 
