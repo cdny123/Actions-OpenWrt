@@ -96,21 +96,22 @@ jobs:
       if: (!cancelled())
       run: df -hT
 
-    - name: Upload bin directory
-      uses: actions/upload-artifact@main
-      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
-      with:
-        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: openwrt/bin
-
     - name: Organize files
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        cd openwrt/bin/targets/*/*
-        rm -rf packages
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        echo "status=success" >> $GITHUB_OUTPUT
+        cd openwrt/bin/targets
+        # 检查是否存在子目录
+        if [ -d "$(ls -d */ 2>/dev/null)" ]; then
+          cd "$(ls -d */ | head -n 1)"
+          cd "$(ls -d */ | head -n 1)"
+          rm -rf packages
+          echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+          echo "status=success" >> $GITHUB_OUTPUT
+        else
+          echo "Error: No subdirectories found in openwrt/bin/targets"
+          exit 1
+        fi
 
     - name: Upload firmware directory
       uses: actions/upload-artifact@main
