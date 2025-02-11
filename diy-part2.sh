@@ -10,6 +10,12 @@
 # See /LICENSE for more information.
 #
 
+# 设置分区大小
+sed -i '/CONFIG_TARGET_KERNEL_PARTSIZE/d' .config
+sed -i '/CONFIG_TARGET_ROOTFS_PARTSIZE/d' .config
+echo "CONFIG_TARGET_KERNEL_PARTSIZE=128" >> .config
+echo "CONFIG_TARGET_ROOTFS_PARTSIZE=4096" >> .config
+
 # 修改默认 IP
 sed -i 's/192.168.1.1/192.168.6.1/g' package/base-files/files/bin/config_generate
 
