@@ -37,9 +37,10 @@ sed -i "s/DISTRIB_DESCRIPTION='[^']*'/DISTRIB_DESCRIPTION='$NEW_DESCRIPTION'/" "
 sed -i 's/^# CONFIG_PACKAGE_luci-theme-argon is not set/CONFIG_PACKAGE_luci-theme-argon=y/' .config
 sed -i 's/^CONFIG_PACKAGE_luci-theme-bootstrap=y/# CONFIG_PACKAGE_luci-theme-bootstrap is not set/' .config
 
-# 添加 luci-app-adguardhome 和 luci-app-openclash
+# 添加 luci-app-adguardhome 和 luci-app-openclash 到配置文件
 echo "CONFIG_PACKAGE_luci-app-adguardhome=y" >> .config
 echo "CONFIG_PACKAGE_luci-app-openclash=y" >> .config
+echo "CONFIG_PACKAGE_luci-app-openclash-core=y" >> .config
 
 # 选择 X86_64 核心
 make target/linux/x86/compile
