@@ -22,10 +22,6 @@ echo "src-git helloworld https://github.com/fw876/helloworld" >> feeds.conf.defa
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 
-# go版本到1.22后，编译碰到的问题
-rm -rf feeds/packages/lang/golang
-git clone https://github.com/kenzok8/golang feeds/packages/lang/golang
-
 # 添加 APP 插件
 git clone https://github.com/sirpdboy/chatgpt-web.git package/luci-app-chatgpt      # chatgpt-web
 git clone https://github.com/sirpdboy/luci-theme-kucat.git package/luci-app-kucat   # kucat主题
