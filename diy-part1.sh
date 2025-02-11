@@ -27,11 +27,6 @@ echo "src-git small https://github.com/kenzok8/small" >> feeds.conf.default
 rm -rf feeds/packages/lang/golang
 git clone https://github.com/kenzok8/golang feeds/packages/lang/golang
 
-# 添加 openwrt-package
-sed -i '1i src-git kenzo https://github.com/kenzok8/openwrt-packages' feeds.conf.default
-sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
-echo 'src-git cdny https://github.com/cdny123/openwrt-package1.git' >>feeds.conf.default
-
 # 添加 APP 插件
 git clone https://github.com/sirpdboy/chatgpt-web.git package/luci-app-chatgpt      # chatgpt-web
 git clone https://github.com/sirpdboy/luci-theme-kucat.git package/luci-app-kucat   # kucat主题
