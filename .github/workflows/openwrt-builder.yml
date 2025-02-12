@@ -118,8 +118,8 @@ jobs:
       uses: actions/upload-artifact@main
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
-        name: OpenWrt_firmware$ env.DEVICE_NAME $ env.FILE_DATE 
-        path: $ env.FIRMWARE 
+        name: OpenWrt_firmware${{ env.DEVICE_NAME }}_${{ env.FILE_DATE }}
+        path: ${{ env.FIRMWARE }}
 
     - name: 生成发布标签
       id: tag
@@ -127,18 +127,18 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         touch release.txt
-        [ ${UPLOAD_GOFILE} = true && $ steps.gofile.outputs.url  ] && echo "🔗 [GoFile]($ steps.gofile.outputs.url )" >> release.txt
+        [ "${{ env.UPLOAD_GOFILE }}" = true && "${{ steps.gofile.outputs.url }}" ] && echo "🔗 [GoFile](${{ steps.gofile.outputs.url }})" >> release.txt
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传固件到发布
-      uses: softprops/action-gh-release@master
+      uses: softprops/action-gh-release@v1
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
-        GITHUB_TOKEN: $ secrets.GITHUB_TOKEN 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: $ steps.tag.outputs.release_tag 
+        tag_name: ${{ steps.tag.outputs.release_tag }}
         body_path: release.txt
-        files: $ env.FIRMWARE /*
+        files: ${{ env.FIRMWARE }}/*
 
     - name: 删除工作流运行记录
       uses: Mattraks/delete-workflow-runs@main
@@ -147,10 +147,11 @@ jobs:
         keep_minimum_runs: 2
 
     - name: 删除旧版本发布
-      uses: dev-drprasad/delete-older-releases@master
+      uses: dev-drprasad/delete-older-releases@v1
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
+        repo: ${{ github.repository }}
         keep_latest: 3
         delete_tags: true
       env:
-        GITHUB_TOKEN: $ secrets.GITHUB_TOKEN
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
