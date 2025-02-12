@@ -17,7 +17,7 @@ jobs:
     steps:
     
       - name: 删除workflow，清理工作流
-        uses: Mattraks/delete-workflow-runs@v0.3.4
+        uses: Mattraks/delete-workflow-runs@v2
         with:
           # 确保在仓库的 Secrets 中添加了 REPO_TOKEN
           token: ${{ secrets.REPO_TOKEN }} 
