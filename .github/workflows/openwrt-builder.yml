@@ -37,6 +37,9 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
+        # 删除不必要的文件和缓存
+        sudo rm -rf /tmp/*
+        sudo rm -rf /var/cache/*
 
     - name: 克隆源代码
       working-directory: /workdir
@@ -86,6 +89,9 @@ jobs:
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+        # 删除不必要的文件和缓存
+        sudo rm -rf /tmp/*
+        sudo rm -rf /var/cache/*
 
     - name: 检查 openwrt/bin/targets 目录
       run: |
@@ -141,8 +147,9 @@ jobs:
         files: ${{ env.FIRMWARE }}/*
 
     - name: 删除工作流运行记录
-      uses: Mattraks/delete-workflow-runs@main
+      uses: Mattraks/delete-workflow-runs@v2
       with:
+        token: ${{ secrets.GITHUB_TOKEN }} # 修改为 GITHUB_TOKEN
         retain_days: 0
         keep_minimum_runs: 2
 
