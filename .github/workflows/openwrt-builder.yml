@@ -19,6 +19,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    timeout-minutes: 720  # 增加超时时间到12小时
 
     steps:
     - name: 检出代码
