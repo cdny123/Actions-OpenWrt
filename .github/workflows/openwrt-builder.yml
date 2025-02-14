@@ -100,6 +100,10 @@ jobs:
 
     - name: 检查 openwrt/bin/targets 目录
       run: |
+        if [ ! -d "openwrt/bin/targets" ]; then
+          echo "Error: openwrt/bin/targets 目录不存在"
+          exit 1
+        fi
         cd openwrt/bin/targets
         ls -la
         echo "status=checked" >> $GITHUB_OUTPUT
