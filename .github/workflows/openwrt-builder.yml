@@ -41,6 +41,10 @@ jobs:
         # 删除不必要的文件和缓存
         sudo rm -rf /tmp/*
         sudo rm -rf /var/cache/*
+        # 清理日志文件
+        sudo journalctl --vacuum-size=100M
+        # 清理旧的构建缓存
+        sudo rm -rf /workdir/openwrt
 
     - name: 克隆源代码
       working-directory: /workdir
